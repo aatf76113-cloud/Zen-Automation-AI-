@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="zainGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="50%" stop-color="#10b981" />
+      <stop offset="100%" stop-color="#14b8a6" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#10b981" flood-opacity="0.35" />
+    </filter>
+  </defs>
+  <!-- Background with squircle/rounded rect -->
+  <rect width="512" height="512" rx="112" fill="#090d16" />
+  <!-- Inner soft border glow -->
+  <rect x="24" y="24" width="464" height="464" rx="92" fill="none" stroke="url(#zainGrad)" stroke-width="6" opacity="0.4" />
+  <!-- Inner gradient backdrop -->
+  <rect x="56" y="56" width="400" height="400" rx="80" fill="url(#zainGrad)" filter="url(#glow)" />
+  <!-- Zap / Automation Symbol -->
+  <path d="M280 96 L168 280 L256 280 L232 416 L344 232 L256 232 Z" fill="#ffffff" stroke="#ffffff" stroke-width="12" stroke-linejoin="round" stroke-linecap="round" />
+  <!-- Small automation dots -->
+  <circle cx="160" cy="160" r="14" fill="#ffffff" opacity="0.75" />
+  <circle cx="352" cy="352" r="14" fill="#ffffff" opacity="0.75" />
+</svg>

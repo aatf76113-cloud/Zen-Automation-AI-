@@ -1,0 +1,6 @@
+{
+  "name": "Zain Automation AI",
+  "description": "منصة ذكية متكاملة للأتمتة وإدارة الـ Workflows بالذكاء الاصطناعي - Automate Your Work. Amplify Your Business.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
