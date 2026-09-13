@@ -285,6 +285,33 @@ async function runAllTests() {
   const savedLead = leads.find(l => l.phone === '+966559876543' || l.name === 'فيصل المطيري');
   assert(Boolean(savedLead), 'Customer Lead registered Authoritatively in CRM DB');
 
+  // 14. Inbound Webhook Payload Early Persistence (Requirement 8)
+  console.log('\nTEST 14: Inbound Webhook Early Payload Persistence & Resilience');
+  const orgId = 'org_zain_hq';
+  const initialCount = db.getInboundEvents(orgId, 'wf_01').length;
+  
+  // Simulate inbound event storage
+  const testPayload = {
+    senderName: 'عميل اختبار الويب هوك',
+    senderPhone: '+966509998877',
+    messageText: 'استفسار تجاري لاختبار تخزين الـ payload',
+    timestamp: new Date().toISOString()
+  };
+
+  const storedEvent = db.saveInboundEvent(orgId, {
+    workflowId: 'wf_01',
+    source: 'Inbound Webhook HTTP Endpoint',
+    payload: testPayload,
+    headers: { 'content-type': 'application/json' },
+    status: 'received'
+  });
+
+  const updatedCount = db.getInboundEvents(orgId, 'wf_01').length;
+  assert(updatedCount === initialCount + 1, 'Inbound event count increased immediately upon reception');
+  assert(storedEvent.id.startsWith('inbound_'), 'Inbound event has valid generated ID');
+  assert(storedEvent.payload.senderPhone === '+966509998877', 'Inbound payload persisted completely intact before AI');
+  assert(storedEvent.status === 'received', 'Inbound event status initialized to received before execution');
+
   console.log('\n========================================');
   console.log(`TEST RESULTS: ${testsPassed} PASSED, ${testsFailed} FAILED`);
   console.log('========================================\n');

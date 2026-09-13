@@ -316,7 +316,7 @@ export const INITIAL_WORKFLOWS: Workflow[] = [
         config: {
           agentId: 'agent_sales_01',
           model: 'moonshotai/kimi-k3',
-          fallbackModel: 'gemini-3.8-flash',
+          fallbackModel: 'gemini-2.5-flash',
           systemPrompt: 'أنت وكيل مبيعات ذكي ومحترف لشركة حلول تقنية وأتمتة. حلل رسالة العميل وحدد درجة التأهيل (leadScore 0-100) والرد المناسب.'
         },
         icon: 'Bot'

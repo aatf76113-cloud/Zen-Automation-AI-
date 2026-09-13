@@ -92,7 +92,7 @@ export interface InboundWebhookEvent {
   payload: Record<string, any>;
   headers?: Record<string, any>;
   executionId?: string;
-  status: 'processed' | 'failed' | 'ignored';
+  status: 'received' | 'processed' | 'completed_with_warnings' | 'failed' | 'ignored';
 }
 
 export interface AIAgent {

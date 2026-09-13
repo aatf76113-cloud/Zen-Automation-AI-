@@ -206,7 +206,7 @@ export const NodeConfigDrawer: React.FC<NodeConfigDrawerProps> = ({
                   {t('مسار الـ Webhook المباشر', 'Webhook Endpoint URL')}
                 </label>
                 <div className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-mono text-[11px] text-emerald-600 dark:text-emerald-400 overflow-x-auto">
-                  <span>https://api.zainauto.ai{config.path || '/webhook/incoming'}</span>
+                  <span>{typeof window !== 'undefined' ? window.location.origin : ''}{config.path || '/api/webhooks/incoming'}</span>
                 </div>
               </div>
 

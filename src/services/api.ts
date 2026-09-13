@@ -330,20 +330,52 @@ class ApiClient {
   }
 
   async triggerWebhookPublic(workflowId: string, payload: Record<string, any>): Promise<any> {
-    const response = await fetch(`/api/webhooks/${workflowId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-organization-id': this.currentOrgId
-      },
-      body: JSON.stringify(payload)
-    });
-    const data = await response.json().catch(() => ({}));
-    return {
-      ...data,
-      httpStatus: response.status,
-      ok: response.ok
-    };
+    try {
+      const response = await fetch(`/api/webhooks/${workflowId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-organization-id': this.currentOrgId
+        },
+        body: JSON.stringify(payload)
+      });
+
+      let data: any = {};
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        data = await response.json().catch(() => ({}));
+      } else {
+        const text = await response.text().catch(() => '');
+        data = { error: text || `HTTP Error ${response.status}: ${response.statusText}` };
+      }
+
+      if (!response.ok) {
+        return {
+          ...data,
+          success: false,
+          httpStatus: response.status,
+          status: response.status === 404 ? 'not_found' : response.status === 422 ? 'unprocessable_entity' : 'failed',
+          error: data.error || (response.status === 404
+            ? `لم يتم العثور على نقطة نهاية Webhook على هذا الخادم (/api/webhooks/${workflowId}) - رمز الاستجابة 404 Not Found. إذا كان هذا على Vercel، تأكد من توفر مسارات Serverless Functions في api/index.ts وعمل Redeploy.`
+            : `تعذر معالجة الطلب برمز HTTP ${response.status}`),
+          ok: false
+        };
+      }
+
+      return {
+        ...data,
+        httpStatus: response.status,
+        ok: true
+      };
+    } catch (netErr: any) {
+      return {
+        success: false,
+        httpStatus: 0,
+        status: 'network_error',
+        error: `تعذر الاتصال بخادم Webhook: ${netErr.message || 'Network connection failed'}`,
+        ok: false
+      };
+    }
   }
 
   // Executions

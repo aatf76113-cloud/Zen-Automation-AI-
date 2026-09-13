@@ -37,8 +37,8 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  // CRITICAL: Always bypass cache for API routes, external services and WebSockets
-  if (url.pathname.startsWith('/api') || event.request.method !== 'GET') {
+  // CRITICAL: Always bypass cache for API routes, webhooks, external services and WebSockets
+  if (url.pathname.startsWith('/api') || url.pathname.startsWith('/webhook') || event.request.method !== 'GET') {
     return;
   }
 

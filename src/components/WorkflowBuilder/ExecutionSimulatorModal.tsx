@@ -152,11 +152,22 @@ export const ExecutionSimulatorModal: React.FC<ExecutionSimulatorModalProps> = (
         setCompletedSteps(succIndices);
       }
 
-      // Refresh inbound events
-      const updated = await api.getInboundWebhookEvents(workflowId);
-      if (updated.events) setInboundEvents(updated.events);
+      // Refresh inbound events safely without overriding webhook response
+      try {
+        const updated = await api.getInboundWebhookEvents(workflowId);
+        if (updated && updated.events) {
+          setInboundEvents(updated.events);
+        }
+      } catch (inboundErr) {
+        console.warn('Inbound events fetch notice:', inboundErr);
+      }
     } catch (err: any) {
-      setWebhookResponse({ error: err.message || 'Webhook transmission failed' });
+      setWebhookResponse({
+        success: false,
+        httpStatus: err.httpStatus || 500,
+        status: 'error',
+        error: err.message || 'Webhook transmission failed'
+      });
     } finally {
       setWebhookSending(false);
     }
@@ -346,12 +357,16 @@ export const ExecutionSimulatorModal: React.FC<ExecutionSimulatorModalProps> = (
                         <span className={`px-2 py-0.5 rounded font-mono font-bold text-[10px] ${
                           webhookResponse.httpStatus === 200 || webhookResponse.success
                             ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
+                            : webhookResponse.httpStatus === 404
+                            ? 'bg-rose-500/20 text-rose-700 dark:text-rose-400 border border-rose-500/30'
                             : 'bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-500/30'
                         }`}>
-                          {webhookResponse.httpStatus ? `HTTP ${webhookResponse.httpStatus}` : (webhookResponse.success ? 'HTTP 200 OK' : 'HTTP 422 UNPROCESSABLE')}
+                          {webhookResponse.httpStatus
+                            ? `HTTP ${webhookResponse.httpStatus} ${webhookResponse.httpStatus === 200 ? 'OK' : webhookResponse.httpStatus === 404 ? 'NOT FOUND' : webhookResponse.httpStatus === 422 ? 'UNPROCESSABLE' : 'ERROR'}`
+                            : (webhookResponse.success ? 'HTTP 200 OK' : 'HTTP ERROR')}
                         </span>
                         <span className={`px-2 py-0.5 rounded font-mono font-bold text-[10px] ${
-                          webhookResponse.status === 'success'
+                          webhookResponse.status === 'success' || webhookResponse.success
                             ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-400'
                             : 'bg-amber-500/20 text-amber-700 dark:text-amber-400'
                         }`}>
@@ -359,6 +374,49 @@ export const ExecutionSimulatorModal: React.FC<ExecutionSimulatorModalProps> = (
                         </span>
                       </div>
                     </div>
+
+                    {webhookResponse.httpStatus === 404 && (
+                      <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs">
+                        <div className="font-bold flex items-center gap-1.5 mb-1">
+                          <AlertTriangle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                          <span>{t('تنبيه مسار Vercel Serverless (404 Not Found)', 'Vercel Serverless Route Notice (404 Not Found)')}</span>
+                        </div>
+                        <p className="leading-relaxed">
+                          {t(
+                            'نقطة نهاية الويب هوك غير مفعّلة بعد على نشرة Vercel الحالية لأن Vercel لم يوجّه /api إلى Serverless Function. تم الآن إنشاء ملف vercel.json و api/[...all].ts في الكود المصدري. يرجى عمل Redeploy للمشروع على Vercel لتفعيل خادم الـ API كاملاً.',
+                            'The webhook endpoint is not routed yet on the current Vercel deployment. vercel.json and api/[...all].ts have now been generated. Please perform a Redeploy on Vercel to activate the serverless API routes.'
+                          )}
+                        </p>
+                      </div>
+                    )}
+
+                    {webhookResponse.httpStatus === 422 && (
+                      <div className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs space-y-1">
+                        <div className="font-bold flex items-center gap-1.5">
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          <span>{t('تشخيص حالة HTTP 422 (Unprocessable Entity)', 'HTTP 422 Diagnostic (Unprocessable Entity)')}</span>
+                        </div>
+                        <p className="leading-relaxed text-[11px]">
+                          {t(
+                            'تم استلام وحفظ الـ Inbound Webhook في قاعدة البيانات بنجاح، ولكن توقف المسار عند عقدة تتطلب بيانات اعتماد خارجية (مثل WhatsApp Business API أو Resend Email) أو مفتاح خدمة AI. في وضع الإنتاج الحقيقي، تلتزم المنصة بعدم إرجاع 200 OK لأي إجراء لم يكتمل فعلياً.',
+                            'The Inbound Webhook was safely saved to DB, but pipeline execution halted at an action requiring external credentials (e.g. WhatsApp Business or Resend Email) or AI key. Real production mode enforces no 200 OK for incomplete actions.'
+                          )}
+                        </p>
+                        {webhookResponse.error && (
+                          <div className="font-mono text-[10px] bg-amber-500/20 p-1.5 rounded text-amber-900 dark:text-amber-100">
+                            {webhookResponse.error}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {webhookResponse.inboundEventId && (
+                      <div className="flex items-center gap-2 text-[11px] text-emerald-700 dark:text-emerald-300 font-mono bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                        <span>{t('تم تسجيل وحفظ الحدث الوارد في قاعدة البيانات بنجاح: ', 'Inbound Event recorded in DB: ')}<strong>{webhookResponse.inboundEventId}</strong></span>
+                      </div>
+                    )}
+
                     <pre className={`font-mono max-h-36 overflow-y-auto ${
                       webhookResponse.success ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
                     }`}>

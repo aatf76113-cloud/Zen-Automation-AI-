@@ -63,7 +63,7 @@ export function breakGeminiCircuit(durationMs: number = 60000) {
 
 /**
  * Executes Gemini content generation with automated fallback across valid model aliases
- * (gemini-3.8-flash -> gemini-flash-latest -> gemini-3.1-flash-lite) and safe handling for 429 quota exhaustion.
+ * (gemini-2.5-flash -> gemini-2.0-flash -> gemini-1.5-flash) and safe handling for 429 quota exhaustion.
  */
 export async function generateGeminiContentSafe(
   ai: GoogleGenAI,
@@ -74,7 +74,7 @@ export async function generateGeminiContentSafe(
     return null;
   }
 
-  const models = ['gemini-3.8-flash', 'gemini-flash-latest', 'gemini-3.1-flash-lite'];
+  const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
   const timeoutMs = options?.timeoutMs ?? 2500;
 
   for (const model of models) {
@@ -102,7 +102,8 @@ export async function generateGeminiContentSafe(
         breakGeminiCircuit(30000);
         return null;
       }
-      break;
+      // If model not found (404) or unsupported, try next model in fallback list
+      continue;
     }
   }
   return null;
