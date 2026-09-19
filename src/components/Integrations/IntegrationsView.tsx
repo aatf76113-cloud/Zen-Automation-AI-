@@ -118,9 +118,9 @@ export const IntegrationsView: React.FC = () => {
       });
     } else if (item.id === 'int_supabase') {
       setFormCredentials({
-        publishableKey: item.config?.publishableKey || 'sb_publishable_0Oz4cvN8zitr3I_nJZ_vXA_pyMzQarR',
-        apiKey: item.config?.publishableKey || 'sb_publishable_0Oz4cvN8zitr3I_nJZ_vXA_pyMzQarR',
-        projectUrl: item.config?.projectUrl || 'https://api.supabase.co'
+        publishableKey: item.config?.publishableKey || 'sb_publishable_OGZ4cvN8zItr3L_nJ7_vXA_pyMzQa-R',
+        apiKey: item.config?.publishableKey || 'sb_publishable_OGZ4cvN8zItr3L_nJ7_vXA_pyMzQa-R',
+        projectUrl: item.config?.projectUrl || 'https://snyqtmugafvoqqpfsxp.supabase.co'
       });
     } else {
       setFormCredentials({
@@ -684,7 +684,7 @@ export const IntegrationsView: React.FC = () => {
                     </label>
                     <input
                       type="text"
-                      placeholder="sb_publishable_0Oz4cvN8zitr3I_nJZ_vXA_pyMzQarR"
+                      placeholder="sb_publishable_OGZ4cvN8zItr3L_nJ7_vXA_pyMzQa-R"
                       value={formCredentials.publishableKey !== undefined ? formCredentials.publishableKey : (formCredentials.apiKey || '')}
                       onChange={(e) => setFormCredentials({ ...formCredentials, publishableKey: e.target.value, apiKey: e.target.value })}
                       className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white text-xs"
@@ -700,8 +700,8 @@ export const IntegrationsView: React.FC = () => {
                     </label>
                     <input
                       type="text"
-                      placeholder="https://xyzproject.supabase.co"
-                      value={formCredentials.projectUrl || 'https://api.supabase.co'}
+                      placeholder="https://snyqtmugafvoqqpfsxp.supabase.co"
+                      value={formCredentials.projectUrl || 'https://snyqtmugafvoqqpfsxp.supabase.co'}
                       onChange={(e) => setFormCredentials({ ...formCredentials, projectUrl: e.target.value })}
                       className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white text-xs"
                     />

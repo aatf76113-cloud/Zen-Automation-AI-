@@ -330,8 +330,8 @@ integrationsRouter.get('/health', async (req: Request, res: Response) => {
   // 7. Supabase Health Check
   let supabaseStatus: KeyHealthStatus = 'NOT_CONFIGURED';
   const credsSupabase = db.getRawCredentials(orgId, 'int_supabase');
-  const supaKey = credsSupabase?.publishableKey || credsSupabase?.apiKey || process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_0Oz4cvN8zitr3I_nJZ_vXA_pyMzQarR';
-  if (supaKey && supaKey.startsWith('sb_publishable_')) {
+  const supaKey = credsSupabase?.publishableKey || credsSupabase?.apiKey || process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_OGZ4cvN8zItr3L_nJ7_vXA_pyMzQa-R';
+  if (supaKey && (supaKey.startsWith('sb_publishable_') || supaKey.startsWith('ey'))) {
     supabaseStatus = 'VALID';
   } else if (supaKey) {
     supabaseStatus = 'VALID';

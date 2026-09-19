@@ -927,8 +927,8 @@ class MultiTenantDatabase {
       // Supabase Cloud Platform (Postgres, Storage & Auth)
       if (item.id === 'int_supabase') {
         const stored = tenant.credentials?.['int_supabase'] || {};
-        const publishableKey = stored.publishableKey || stored.apiKey || process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_0Oz4cvN8zitr3I_nJZ_vXA_pyMzQarR';
-        const projectUrl = stored.projectUrl || process.env.SUPABASE_URL || 'https://api.supabase.co';
+        const publishableKey = stored.publishableKey || stored.apiKey || process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_OGZ4cvN8zItr3L_nJ7_vXA_pyMzQa-R';
+        const projectUrl = stored.projectUrl || process.env.SUPABASE_URL || 'https://snyqtmugafvoqqpfsxp.supabase.co';
         return {
           ...item,
           connected: true,
@@ -1082,8 +1082,8 @@ class MultiTenantDatabase {
     }
 
     if (integrationId === 'int_supabase') {
-      const publishableKey = stored.publishableKey || stored.apiKey || process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_0Oz4cvN8zitr3I_nJZ_vXA_pyMzQarR';
-      const projectUrl = stored.projectUrl || process.env.SUPABASE_URL || 'https://api.supabase.co';
+      const publishableKey = stored.publishableKey || stored.apiKey || process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_OGZ4cvN8zItr3L_nJ7_vXA_pyMzQa-R';
+      const projectUrl = stored.projectUrl || process.env.SUPABASE_URL || 'https://snyqtmugafvoqqpfsxp.supabase.co';
       return { ...stored, publishableKey, apiKey: publishableKey, projectUrl };
     }
 

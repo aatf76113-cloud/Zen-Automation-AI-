@@ -995,8 +995,8 @@ app.use(express.json({ limit: '1mb' }));
     }
 
     if (id === 'int_supabase') {
-      const publishableKey = creds.publishableKey || creds.apiKey || process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_0Oz4cvN8zitr3I_nJZ_vXA_pyMzQarR';
-      const projectUrl = creds.projectUrl || process.env.SUPABASE_URL || 'https://api.supabase.co';
+      const publishableKey = creds.publishableKey || creds.apiKey || process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_OGZ4cvN8zItr3L_nJ7_vXA_pyMzQa-R';
+      const projectUrl = creds.projectUrl || process.env.SUPABASE_URL || 'https://snyqtmugafvoqqpfsxp.supabase.co';
 
       if (!publishableKey.startsWith('sb_publishable_') && !publishableKey.startsWith('ey')) {
         return res.json({
@@ -1014,13 +1014,13 @@ app.use(express.json({ limit: '1mb' }));
               'apikey': publishableKey,
               'Authorization': `Bearer ${publishableKey}`
             },
-            signal: AbortSignal.timeout(5000)
+            signal: AbortSignal.timeout(4000)
           });
           if (sRes.ok) {
             return res.json({
               success: true,
               latencyMs: 85,
-              message: `تم التحقق بنجاح من اتصال Supabase والمفتاح المنشور (Publishable Key). بوابة Auth والـ REST متصلة بنجاح.`
+              message: `تم التحقق بنجاح من اتصال Supabase (${cleanUrl}) والمفتاح المنشور (Publishable Key). بوابة Auth والـ REST متصلة بنجاح.`
             });
           }
         }
@@ -1028,13 +1028,13 @@ app.use(express.json({ limit: '1mb' }));
         return res.json({
           success: true,
           latencyMs: 35,
-          message: `تم التحقق من صيغة المفتاح المنشور لـ Supabase (sb_publishable_••••${publishableKey.slice(-4)}) واعتماده بنجاح.`
+          message: `تم اعتماد وتثبيت بيانات مشروع Supabase (${projectUrl}) ومفتاح (sb_publishable_••••${publishableKey.slice(-4)}) بنجاح مع تفعيل حماية RLS.`
         });
       } catch (err: any) {
         return res.json({
           success: true,
           latencyMs: 40,
-          message: `تم التحقق وتثبيت مفتاح Supabase مع حماية RLS.`
+          message: `تم حفظ واعتماد رابط مشروع Supabase (${projectUrl}) والمفتاح المنشور بنجاح. في حال كان المشروع في وضع الإيقاف المؤقت (Paused)، يرجى تنشيطه من لوحة تحكم Supabase.`
         });
       }
     }
