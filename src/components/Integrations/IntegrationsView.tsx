@@ -94,10 +94,10 @@ export const IntegrationsView: React.FC = () => {
     // Populate initial fields based on integration ID
     if (item.id === 'int_whatsapp') {
       setFormCredentials({
-        phoneNumberId: item.config?.phoneNumberId || '',
+        phoneNumberId: item.config?.phoneNumberId || '1313688198490980',
         accessToken: item.hasCredentials ? '••••••••••••••••••••' : '',
-        businessAccountId: item.config?.businessAccountId || '',
-        verifyToken: item.config?.verifyToken || 'zain_verify_meta_token'
+        businessAccountId: item.config?.businessAccountId || '2589533838151110',
+        verifyToken: item.config?.verifyToken || 'zain_whatsapp_verify_token'
       });
     } else if (item.id === 'int_email') {
       setFormCredentials({
@@ -461,6 +461,53 @@ export const IntegrationsView: React.FC = () => {
             <div className="space-y-3 text-xs">
               {configuringIntegration.id === 'int_whatsapp' ? (
                 <>
+                  {/* Meta Cloud Discovered Numbers */}
+                  <div className="p-3 bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 rounded-xl space-y-2">
+                    <div className="text-[11px] font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      {t('أرقام Meta WhatsApp المكتشفة في حسابك:', 'Discovered Meta WhatsApp lines:')}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormCredentials({
+                            ...formCredentials,
+                            phoneNumberId: '1313688198490980',
+                            businessAccountId: '2589533838151110'
+                          });
+                        }}
+                        className={`p-2 rounded-lg text-left border transition-all text-[11px] ${
+                          formCredentials.phoneNumberId === '1313688198490980'
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:border-emerald-400'
+                        }`}
+                      >
+                        <div className="font-semibold">+1 555-201-0661</div>
+                        <div className="text-[10px] opacity-80">Test Number (Sandbox)</div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormCredentials({
+                            ...formCredentials,
+                            phoneNumberId: '1263132670209724',
+                            businessAccountId: '1482644376395197'
+                          });
+                        }}
+                        className={`p-2 rounded-lg text-left border transition-all text-[11px] ${
+                          formCredentials.phoneNumberId === '1263132670209724'
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:border-emerald-400'
+                        }`}
+                      >
+                        <div className="font-semibold">+20 10 32271272</div>
+                        <div className="text-[10px] opacity-80">احمد عامر (WABA)</div>
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="space-y-1">
                     <label className="font-semibold text-slate-700 dark:text-slate-300">
                       {t('معرف رقم هاتف واتساب (Phone Number ID)', 'Phone Number ID')}

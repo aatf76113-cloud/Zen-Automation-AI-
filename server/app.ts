@@ -864,7 +864,9 @@ app.use(express.json({ limit: '1mb' }));
   app.post('/api/integrations/:id/test', async (req, res) => {
     const orgId = resolveOrgId(req);
     const { id } = req.params;
-    const creds = db.getRawCredentials(orgId, id) || req.body.credentials || {};
+    const defaultCreds = db.getRawCredentials(orgId, id) || {};
+    const incomingCreds = req.body.credentials || {};
+    const creds = { ...defaultCreds, ...incomingCreds };
     const startTime = Date.now();
 
     // Check specific credentials per service
