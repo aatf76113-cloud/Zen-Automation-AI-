@@ -105,7 +105,7 @@ export class WhatsAppService {
     apiVersion?: string;
   }) {
     const phoneNumberId = (process.env.WHATSAPP_PHONE_NUMBER_ID || orgCredentials?.phoneNumberId || '1313688198490980').trim();
-    const accessToken = (process.env.WHATSAPP_ACCESS_TOKEN || orgCredentials?.accessToken || 'EAAUWVuLU4ukBSmlRKOStJNkvME3jXeHqNzf61sZC0q5KchddMGdjmq5q0VMrDVIDhZBvnWf7ekQH9QBg9Gl7DuAA7fsprwRxZCypgCu4LnexVzCPlDBzQvLWyxbBcYUQbD1gZAfBWLS0p60ej3ZB604RPWs8BQ4MdH03QmM5of70TLGjagdCzwRJYjMp01q74ShQJ2BPjbilbFZAFao20VVPxNZALO7difP9S9KYzrFfJMIRMCSsVqTRZCkgT5u5GBa4jfNjImRaCBWD857ffQJGZA2EZC3Q4ZD').trim();
+    const accessToken = (process.env.WHATSAPP_ACCESS_TOKEN || orgCredentials?.accessToken || 'EAAUWVuLU4ukBSpjlPQiapSbCRr7y2ufthH7IniZB5uTslb0tqLSbco53pM4tI5QWVCFqBeZBqCdGAkBe39943xfnw7Ld6Hg37GFm3uCNyX3nUEkEYYRs0ZCwF6bKvZAMEZAufpxGsdRqs38p9ciqf0FkQHZAoke4QXwqlGSZCdGuZA6brdKeYhTYlNTyUtKZCuDCRFQZDZD').trim();
     const appSecret = (process.env.WHATSAPP_APP_SECRET || orgCredentials?.appSecret || '').trim();
     const verifyToken = (process.env.WHATSAPP_VERIFY_TOKEN || orgCredentials?.verifyToken || 'zain_whatsapp_verify_token').trim();
     const businessAccountId = (process.env.WHATSAPP_BUSINESS_ACCOUNT_ID || orgCredentials?.businessAccountId || '2589533838151110').trim();
@@ -171,7 +171,7 @@ export class WhatsAppService {
     const missing: ('WHATSAPP_ACCESS_TOKEN' | 'WHATSAPP_PHONE_NUMBER_ID' | 'WHATSAPP_BUSINESS_ACCOUNT_ID')[] = [];
     const configured: ('WHATSAPP_ACCESS_TOKEN' | 'WHATSAPP_PHONE_NUMBER_ID' | 'WHATSAPP_BUSINESS_ACCOUNT_ID')[] = [];
 
-    const token = process.env.WHATSAPP_ACCESS_TOKEN?.trim() || 'EAAUWVuLU4ukBSmlRKOStJNkvME3jXeHqNzf61sZC0q5KchddMGdjmq5q0VMrDVIDhZBvnWf7ekQH9QBg9Gl7DuAA7fsprwRxZCypgCu4LnexVzCPlDBzQvLWyxbBcYUQbD1gZAfBWLS0p60ej3ZB604RPWs8BQ4MdH03QmM5of70TLGjagdCzwRJYjMp01q74ShQJ2BPjbilbFZAFao20VVPxNZALO7difP9S9KYzrFfJMIRMCSsVqTRZCkgT5u5GBa4jfNjImRaCBWD857ffQJGZA2EZC3Q4ZD';
+    const token = process.env.WHATSAPP_ACCESS_TOKEN?.trim() || 'EAAUWVuLU4ukBSpjlPQiapSbCRr7y2ufthH7IniZB5uTslb0tqLSbco53pM4tI5QWVCFqBeZBqCdGAkBe39943xfnw7Ld6Hg37GFm3uCNyX3nUEkEYYRs0ZCwF6bKvZAMEZAufpxGsdRqs38p9ciqf0FkQHZAoke4QXwqlGSZCdGuZA6brdKeYhTYlNTyUtKZCuDCRFQZDZD';
     const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID?.trim() || '1313688198490980';
     const wabaId = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID?.trim() || '2589533838151110';
 

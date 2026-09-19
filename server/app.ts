@@ -204,7 +204,10 @@ app.use(express.json({ limit: '1mb' }));
   // Dedicated Routers
   app.use('/api/integrations', integrationsRouter);
   app.use('/api/webhooks/whatsapp', webhooksRouter);
+  app.use('/api/webhooks', webhooksRouter);
+  app.use('/api/webhook', webhooksRouter);
   app.use('/webhook/whatsapp', webhooksRouter);
+  app.use('/webhook', webhooksRouter);
   app.use('/api/ai', aiRouter);
   app.use('/api/whatsapp', whatsappRouter);
 
