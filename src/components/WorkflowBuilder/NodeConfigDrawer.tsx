@@ -14,7 +14,7 @@ export const NodeConfigDrawer: React.FC<NodeConfigDrawerProps> = ({
   onClose,
   onUpdateNode
 }) => {
-  const { builderNodes, language, agents, knowledgeDocs, t } = useApp();
+  const { builderNodes, selectedWorkflow, language, agents, knowledgeDocs, t } = useApp();
 
   const activeNode = (builderNodes || []).find((n) => n.id === nodeId);
 
@@ -135,13 +135,86 @@ export const NodeConfigDrawer: React.FC<NodeConfigDrawerProps> = ({
                 </label>
                 <select
                   value={config.model || 'gemini-2.5-flash'}
-                  onChange={(e) => handleConfigChange('model', e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    handleConfigChange('model', val);
+                    if (val.startsWith('ollama/')) {
+                      handleConfigChange('provider', 'ollama');
+                      handleConfigChange('baseUrl', 'http://127.0.0.1:11434');
+                      handleConfigChange('isLocalOnly', true);
+                    } else if (val.startsWith('ollama_tunnel/')) {
+                      handleConfigChange('provider', 'ollama');
+                      handleConfigChange('baseUrl', config.baseUrl && config.baseUrl.includes('trycloudflare.com') ? config.baseUrl : 'https://xxxx.trycloudflare.com');
+                      handleConfigChange('isLocalOnly', false);
+                    }
+                  }}
                   className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
                 >
-                  <option value="gemini-2.5-flash">Gemini 2.5 Flash (سرعة فائقة)</option>
-                  <option value="gemini-2.5-pro">Gemini 2.5 Pro (تحليل استراتيجي عميق)</option>
+                  <optgroup label={t('🌐 عام وخارجي (Cloudflare Tunnel)', '🌐 Public Cloudflare Tunnel')}>
+                    <option value="ollama_tunnel/llama3:latest">Ollama Llama 3 (نفق trycloudflare.com)</option>
+                    <option value="ollama_tunnel/deepseek-r1:latest">Ollama DeepSeek-R1 (نفق trycloudflare.com)</option>
+                    <option value="ollama_tunnel/mistral:latest">Ollama Mistral (نفق trycloudflare.com)</option>
+                  </optgroup>
+                  <optgroup label={t('💻 خادم محلي داخلي (http://127.0.0.1:11434)', '💻 Internal Local Ollama (http://127.0.0.1:11434)')}>
+                    <option value="ollama/llama3:latest">Ollama Llama 3 (داخلي 127.0.0.1:11434)</option>
+                    <option value="ollama/mistral:latest">Ollama Mistral (داخلي 127.0.0.1:11434)</option>
+                    <option value="ollama/deepseek-r1:latest">Ollama DeepSeek-R1 (داخلي 127.0.0.1:11434)</option>
+                    <option value="ollama/qwen2.5:latest">Ollama Qwen 2.5 (داخلي 127.0.0.1:11434)</option>
+                  </optgroup>
+                  <optgroup label={t('☁️ نماذج سحابية خارجية (Cloud APIs)', '☁️ Cloud APIs')}>
+                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (سرعة فائقة)</option>
+                    <option value="gemini-2.5-pro">Gemini 2.5 Pro (تحليل استراتيجي عميق)</option>
+                  </optgroup>
                 </select>
               </div>
+
+              {/* Cloudflare Tunnel configuration field */}
+              {config.model?.startsWith('ollama_tunnel/') && (
+                <div className="space-y-2 p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/40">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-amber-900 dark:text-amber-200 flex items-center justify-between">
+                      <span>{t('رابط نفق Cloudflare الخارجي', 'Cloudflare Tunnel URL')}</span>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 font-mono">
+                        HTTPS
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="https://xxxx.trycloudflare.com"
+                      value={config.baseUrl || 'https://xxxx.trycloudflare.com'}
+                      onChange={(e) => handleConfigChange('baseUrl', e.target.value)}
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-amber-200 dark:border-amber-800/60 bg-white dark:bg-slate-900 text-[11px] font-mono text-slate-900 dark:text-white"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-semibold text-amber-900 dark:text-amber-200 flex items-center justify-between">
+                      <span>{t('مفتاح المصادقة x-api-key', 'Authentication Key x-api-key')}</span>
+                      <span className="text-[9px] font-mono text-slate-400">application/json</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="ZAIN_SECRET_2026"
+                      value={config.apiKey !== undefined ? config.apiKey : 'ZAIN_SECRET_2026'}
+                      onChange={(e) => handleConfigChange('apiKey', e.target.value)}
+                      className="w-full px-2.5 py-1.5 rounded-lg border border-amber-200 dark:border-amber-800/60 bg-white dark:bg-slate-900 text-[11px] font-mono text-slate-900 dark:text-white"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Local Ollama internal badge indicator */}
+              {config.model?.startsWith('ollama/') && (
+                <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-[11px] text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                  <span>
+                    {t(
+                      '🔒 يعمل كنموذج داخلي فقط على http://127.0.0.1:11434 دون إرسال البيانات خارج الخادم.',
+                      '🔒 Runs internally only on http://127.0.0.1:11434 without sending data outside the server.'
+                    )}
+                  </span>
+                </div>
+              )}
 
               {activeNode.subType === 'ai_chat' && (
                 <div className="space-y-1">
@@ -202,26 +275,45 @@ export const NodeConfigDrawer: React.FC<NodeConfigDrawerProps> = ({
           {activeNode.type === 'trigger' && (
             <div className="space-y-3">
               <div className="space-y-1">
-                <label className="text-slate-600 dark:text-slate-400 font-medium">
-                  {t('مسار الـ Webhook المباشر', 'Webhook Endpoint URL')}
-                </label>
-                <div className="flex items-center gap-1.5 p-2 rounded-xl bg-slate-100 dark:bg-slate-800 font-mono text-[11px] text-emerald-600 dark:text-emerald-400 overflow-x-auto">
-                  <span>{typeof window !== 'undefined' ? window.location.origin : ''}{config.path || '/api/webhooks/incoming'}</span>
+                <div className="flex items-center justify-between">
+                  <label className="text-slate-600 dark:text-slate-400 font-medium text-xs">
+                    {t('المسار الأساسي الموحد (Production Webhook URL)', 'Unified Primary Production Webhook URL')}
+                  </label>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
+                    POST · application/json
+                  </span>
                 </div>
+                <div className="flex items-center justify-between gap-1.5 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 font-mono text-[11px] text-emerald-600 dark:text-emerald-400 overflow-x-auto">
+                  <span className="select-all">
+                    {`https://zen-automation-ai.vercel.app/api/webhooks/${selectedWorkflow?.id || 'wf_01'}`}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`https://zen-automation-ai.vercel.app/api/webhooks/${selectedWorkflow?.id || 'wf_01'}`);
+                    }}
+                    className="shrink-0 px-2 py-1 text-[10px] font-sans font-medium rounded-lg bg-emerald-500 text-white hover:bg-emerald-600 transition-colors"
+                  >
+                    {t('نسخ', 'Copy')}
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                  {t('يستقبل POST مع Content-Type: application/json ويسجل البيانات الواردة مباشرة قبل تشغيل الذكاء الاصطناعي.', 'Accepts POST with Content-Type: application/json and records inbound events prior to AI execution.')}
+                </p>
               </div>
 
               <div className="space-y-1">
-                <label className="text-slate-600 dark:text-slate-400 font-medium">
-                  {t('نوع الاستدعاء البرمجي', 'HTTP Method')}
+                <label className="text-slate-600 dark:text-slate-400 font-medium text-xs">
+                  {t('نوع الاستدعاء ومحتوى الطلب', 'HTTP Method & Content Type')}
                 </label>
-                <select
-                  value={config.method || 'POST'}
-                  onChange={(e) => handleConfigChange('method', e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
-                >
-                  <option value="POST">POST (JSON Body)</option>
-                  <option value="GET">GET (Query Params)</option>
-                </select>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold">
+                    POST (Unified)
+                  </div>
+                  <div className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white text-xs font-semibold">
+                    application/json
+                  </div>
+                </div>
               </div>
             </div>
           )}

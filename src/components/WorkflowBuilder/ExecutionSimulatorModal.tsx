@@ -317,6 +317,7 @@ export const ExecutionSimulatorModal: React.FC<ExecutionSimulatorModalProps> = (
                   <div className="text-slate-400 font-sans text-[10px] uppercase font-bold">cURL Example:</div>
                   <pre className="text-emerald-400">{`curl -X POST "${webhookUrl}" \\
   -H "Content-Type: application/json" \\
+  -H "x-api-key: ZAIN_SECRET_2026" \\
   -d '{"name":"${testPayload.name}","phone":"${testPayload.phone}","message":"${testPayload.message}"}'`}</pre>
                 </div>
 

@@ -197,3 +197,15 @@ whatsappRouter.get('/info', (req: Request, res: Response) => {
     webhookUrl
   });
 });
+
+/**
+ * Validate server-side WhatsApp environment variables without exposing secrets
+ * GET /api/whatsapp/validate-env
+ */
+whatsappRouter.get('/validate-env', (req: Request, res: Response) => {
+  const validation = WhatsAppService.validateEnvironment();
+  return res.status(validation.isValid ? 200 : 422).json({
+    ...validation,
+    timestamp: new Date().toISOString()
+  });
+});

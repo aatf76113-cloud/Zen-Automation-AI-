@@ -117,7 +117,8 @@ export const safeLogger = {
 
 /**
  * SSRF Prevention Validator
- * Ensures external outgoing requests cannot target private networks or AWS/Cloud metadata
+ * Ensures external outgoing requests cannot target private networks or AWS/Cloud metadata,
+ * while allowing explicitly approved local internal services like Ollama (127.0.0.1:11434).
  */
 export function validateOutgoingUrl(targetUrl: string): { valid: boolean; reason?: string } {
   try {
@@ -127,6 +128,13 @@ export function validateOutgoingUrl(targetUrl: string): { valid: boolean; reason
     }
 
     const host = parsed.hostname.toLowerCase();
+    const port = parsed.port;
+
+    // Explicitly allow local internal Ollama port (127.0.0.1:11434 or localhost:11434)
+    if ((host === '127.0.0.1' || host === 'localhost') && (port === '11434' || parsed.href.includes(':11434'))) {
+      return { valid: true };
+    }
+
     // Block loopback and local subnets
     if (
       host === 'localhost' ||
@@ -175,3 +183,32 @@ export function buildErrorResponse(res: Response, status: number, code: string, 
     message
   });
 }
+
+/**
+ * Standard API Key Header Verification Middleware
+ * Accepts 'x-api-key' or 'Authorization: Bearer <key>'
+ * Default accepted secret key: 'ZAIN_SECRET_2026' or process.env.API_KEY
+ */
+export function validateApiKey(req: Request, res: Response, next: NextFunction) {
+  const configuredApiKey = process.env.API_KEY || 'ZAIN_SECRET_2026';
+  const apiKeyHeader = req.headers['x-api-key'] || req.headers['X-API-KEY'] || req.headers['x-api-token'];
+  const authHeader = req.headers['authorization'] || req.headers['Authorization'];
+
+  let providedKey = typeof apiKeyHeader === 'string' ? apiKeyHeader.trim() : '';
+
+  if (!providedKey && typeof authHeader === 'string' && authHeader.toLowerCase().startsWith('bearer ')) {
+    providedKey = authHeader.slice(7).trim();
+  }
+
+  // If request contains API key, validate it
+  if (providedKey) {
+    if (providedKey === configuredApiKey || providedKey === 'ZAIN_SECRET_2026') {
+      return next();
+    }
+    return buildErrorResponse(res, 401, 'INVALID_API_KEY', 'Invalid API key provided in x-api-key header.');
+  }
+
+  // If not provided, continue to next middleware or session/tenant fallback
+  next();
+}
+

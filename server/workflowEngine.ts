@@ -1,6 +1,7 @@
 import { Workflow, WorkflowNode, ExecutionLog, NodeExecutionTrace, CustomerLead } from '../src/types/index';
 import { db } from './db';
 import { GoogleGenAI } from '@google/genai';
+import { OllamaService } from './services/ollamaService';
 
 let geminiClient: GoogleGenAI | null = null;
 function getGemini(): GoogleGenAI | null {
@@ -62,20 +63,54 @@ export function breakGeminiCircuit(durationMs: number = 60000) {
 }
 
 /**
+ * Normalizes any model alias or deprecated model name to a valid @google/genai model
+ */
+export function normalizeGeminiModel(model?: string): string {
+  if (!model) return 'gemini-3.8-flash';
+  const m = model.trim().toLowerCase();
+  if (
+    m === 'gemini-2.5-flash' ||
+    m === 'gemini-2.0-flash' ||
+    m === 'gemini-1.5-flash' ||
+    m === 'gemini-flash'
+  ) {
+    return 'gemini-3.8-flash';
+  }
+  if (
+    m === 'gemini-2.0-pro' ||
+    m === 'gemini-1.5-pro' ||
+    m === 'gemini-pro' ||
+    m === 'gemini-3.1-pro'
+  ) {
+    return 'gemini-3.1-pro-preview';
+  }
+  if (m === 'gemini-lite' || m === 'flash-lite' || m === 'gemini-3.1-flash-lite') {
+    return 'gemini-3.1-flash-lite';
+  }
+  return model;
+}
+
+/**
  * Executes Gemini content generation with automated fallback across valid model aliases
- * (gemini-2.5-flash -> gemini-2.0-flash -> gemini-1.5-flash) and safe handling for 429 quota exhaustion.
+ * (gemini-3.8-flash -> gemini-flash-latest -> gemini-3.1-flash-lite) and safe handling for 429 quota exhaustion.
  */
 export async function generateGeminiContentSafe(
   ai: GoogleGenAI,
   prompt: string,
-  options?: { timeoutMs?: number }
+  options?: { timeoutMs?: number; model?: string }
 ): Promise<{ text: string; model: string } | null> {
   if (!isGeminiAvailable()) {
     return null;
   }
 
-  const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
-  const timeoutMs = options?.timeoutMs ?? 2500;
+  const requestedModel = normalizeGeminiModel(options?.model);
+  const models = Array.from(new Set([
+    requestedModel,
+    'gemini-3.8-flash',
+    'gemini-flash-latest',
+    'gemini-3.1-flash-lite'
+  ]));
+  const timeoutMs = options?.timeoutMs ?? 5000;
 
   for (const model of models) {
     try {
@@ -484,6 +519,61 @@ export class WorkflowEngine {
       let retriesCount = 0;
       let aiProviderName = 'Zain AI Arabic Sales Intelligence (NLP/Gemini)';
 
+      // Check Ollama Local / Cloudflare Tunnel Provider
+      const isOllamaRequested = config.provider === 'ollama' ||
+        config.model?.startsWith('ollama') ||
+        config.model?.includes('llama3') ||
+        config.model?.includes('mistral') ||
+        config.model?.includes('qwen') ||
+        Boolean(config.baseUrl?.includes('trycloudflare.com')) ||
+        config.isLocalOnly === true;
+
+      if (isOllamaRequested) {
+        try {
+          const sysPrompt = config.systemPrompt || 'أنت وكيل ذكاء اصطناعي محلي لمنصة زين للأتمتة والذكاء الاصطناعي. حلل الرسالة وقدم رداً احترافياً بالعربية بصيغة JSON تحوي: reply, leadScore (0-100), isHighIntent (boolean), summary.';
+          const userPrompt = `${sysPrompt}\n\nبيانات العميل: الاسم: ${input.senderName || input.name || 'العميل'} | الرسالة: "${userText}"`;
+          const targetModel = config.model?.replace('ollama/', '') || 'llama3:latest';
+          const targetBaseUrl = config.baseUrl || 'http://127.0.0.1:11434';
+          const targetApiKey = config.apiKey || 'ZAIN_SECRET_2026';
+          const isTunnel = targetBaseUrl.includes('.trycloudflare.com') || targetBaseUrl.startsWith('https://');
+
+          const ollamaRes = await OllamaService.chat({
+            prompt: userPrompt,
+            systemPrompt: sysPrompt,
+            model: targetModel,
+            baseUrl: targetBaseUrl,
+            apiKey: targetApiKey
+          });
+
+          if (ollamaRes.success && ollamaRes.response) {
+            const raw = ollamaRes.response;
+            const match = raw.match(/\{[\s\S]*\}/);
+            const providerTag = isTunnel
+              ? `Ollama Tunnel (${ollamaRes.model || targetModel}) [Cloudflare]`
+              : `Ollama Local (${ollamaRes.model || targetModel}) [127.0.0.1:11434]`;
+
+            if (match) {
+              try {
+                const parsed = JSON.parse(match[0]);
+                if (parsed.reply) replyText = parsed.reply;
+                if (parsed.leadScore) leadScore = Number(parsed.leadScore);
+                if (parsed.isHighIntent !== undefined) isHighIntent = Boolean(parsed.isHighIntent);
+                if (parsed.summary) analysisSummary = parsed.summary;
+                aiProviderName = providerTag;
+              } catch {
+                replyText = raw.trim();
+                aiProviderName = providerTag;
+              }
+            } else {
+              replyText = raw.trim();
+              aiProviderName = providerTag;
+            }
+          }
+        } catch (ollamaErr: any) {
+          console.warn('Ollama AI execution notice:', ollamaErr.message);
+        }
+      }
+
       // Check external AI providers (NVIDIA DeepSeek / Moonshot / Llama)
       const nvidiaKey = process.env.NVIDIA_API_KEY;
       const isNvidiaConfigured = Boolean(nvidiaKey) && (config.provider === 'nvidia' || config.model?.includes('deepseek') || config.model?.includes('moonshot') || config.model?.includes('kimi'));
@@ -492,8 +582,8 @@ export class WorkflowEngine {
         try {
           const sysPrompt = config.systemPrompt || 'أنت وكيل ذكاء اصطناعي محترف لخدمة العملاء والتأهيل في منصة زين للأتمتة والذكاء الاصطناعي. حلل الرسالة وقدم رداً احترافياً بالعربية بصيغة JSON تحوي: reply, leadScore (0-100), isHighIntent (boolean), summary.';
           const modelsToTry = [
-            config.model || 'deepseek-ai/deepseek-v4-flash-0731',
-            'meta/llama-3.2-11b-vision-instruct',
+            config.model?.includes('deepseek') ? 'deepseek-ai/deepseek-r1' : (config.model || 'deepseek-ai/deepseek-r1'),
+            'meta/llama-3.1-8b-instruct',
             'moonshotai/kimi-k3'
           ];
 
@@ -568,7 +658,7 @@ export class WorkflowEngine {
       if (ai && aiProviderName.includes('NLP')) {
         const sysPrompt = config.systemPrompt || 'أنت وكيل ذكاء اصطناعي محترف لخدمة العملاء والتأهيل. حلل الرسالة وقدم رداً احترافياً بالعربية بصيغة JSON تحوي: reply, leadScore (0-100), isHighIntent (boolean), summary.';
         const prompt = `${sysPrompt}\n\nبيانات العميل: الاسم: ${input.senderName || 'العميل'} | الرسالة: "${userText}"`;
-        const geminiRes = await generateGeminiContentSafe(ai, prompt, { timeoutMs: 2500 });
+        const geminiRes = await generateGeminiContentSafe(ai, prompt, { timeoutMs: 8000, model: config.model });
         if (geminiRes?.text) {
           const match = geminiRes.text.match(/\{[\s\S]*\}/);
           if (match) {
@@ -591,7 +681,7 @@ export class WorkflowEngine {
       }
 
       // Check APInex (DeepSeek V4 Flash) if response still needed
-      const apinexKey = process.env.APINEX_API_KEY;
+      const apinexKey = process.env.APINEX_API_KEY || 'sk-apx1592cd6b7c07cdbb45239662d03fdb87ef686b5553acd2f';
       if (apinexKey && aiProviderName.includes('NLP')) {
         try {
           const sysPrompt = config.systemPrompt || 'أنت وكيل ذكاء اصطناعي محترف لخدمة العملاء والتأهيل في منصة زين. حلل الرسالة وقدم رداً احترافياً بالعربية بصيغة JSON: {"reply": "...", "leadScore": 85, "isHighIntent": true, "summary": "..."}';

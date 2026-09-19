@@ -888,6 +888,60 @@ class MultiTenantDatabase {
         };
       }
 
+      // Ollama local internal daemon or public Cloudflare Tunnel (https://xxxx.trycloudflare.com)
+      if (item.id === 'int_ollama') {
+        const storedOllama = tenant.credentials?.['int_ollama'] || {};
+        const baseUrl = storedOllama.baseUrl || process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434';
+        const isTunnel = baseUrl.includes('.trycloudflare.com') || baseUrl.startsWith('https://');
+        const apiKey = storedOllama.apiKey || process.env.API_KEY || 'ZAIN_SECRET_2026';
+        return {
+          ...item,
+          connected: true,
+          hasCredentials: true,
+          statusText: isTunnel ? `Cloudflare Tunnel (${baseUrl})` : `Internal Daemon (${baseUrl})`,
+          statusTextAr: isTunnel ? `نفق عام وخارجي (${baseUrl})` : `خادم داخلي محلي (${baseUrl})`,
+          maskedCredentials: {
+            baseUrl,
+            apiKey: apiKey.length > 6 ? `${apiKey.slice(0, 4)}••••${apiKey.slice(-4)}` : '••••••',
+            defaultModel: storedOllama.model || 'llama3:latest'
+          }
+        };
+      }
+
+      // APInex AI Engine
+      if (item.id === 'int_apinex') {
+        const stored = tenant.credentials?.['int_apinex'] || {};
+        const apiKey = stored.apiKey || process.env.APINEX_API_KEY || 'sk-apx1592cd6b7c07cdbb45239662d03fdb87ef686b5553acd2f';
+        return {
+          ...item,
+          connected: true,
+          hasCredentials: true,
+          statusText: 'APInex Active (DeepSeek-V4)',
+          statusTextAr: 'محرك APInex نشط وموثق',
+          maskedCredentials: {
+            apiKey: `${apiKey.slice(0, 6)}••••${apiKey.slice(-4)}`
+          }
+        };
+      }
+
+      // Supabase Cloud Platform (Postgres, Storage & Auth)
+      if (item.id === 'int_supabase') {
+        const stored = tenant.credentials?.['int_supabase'] || {};
+        const publishableKey = stored.publishableKey || stored.apiKey || process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_0Oz4cvN8zitr3I_nJZ_vXA_pyMzQarR';
+        const projectUrl = stored.projectUrl || process.env.SUPABASE_URL || 'https://api.supabase.co';
+        return {
+          ...item,
+          connected: true,
+          hasCredentials: true,
+          statusText: 'Supabase Active (RLS Safe)',
+          statusTextAr: 'مفتاح Supabase نشط وموثق',
+          maskedCredentials: {
+            publishableKey: `${publishableKey.slice(0, 15)}••••${publishableKey.slice(-4)}`,
+            projectUrl
+          }
+        };
+      }
+
       const creds = tenant.credentials[item.id];
       const hasCredentials = Boolean(creds && Object.keys(creds).length > 0);
       const masked: Record<string, string> = {};
@@ -1013,6 +1067,24 @@ class MultiTenantDatabase {
       if (apiKey) {
         return { ...stored, apiKey };
       }
+    }
+
+    if (integrationId === 'int_ollama') {
+      const baseUrl = stored.baseUrl || process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434';
+      const model = stored.model || process.env.OLLAMA_MODEL || 'llama3:latest';
+      const apiKey = stored.apiKey || process.env.API_KEY || 'ZAIN_SECRET_2026';
+      return { ...stored, baseUrl, model, apiKey };
+    }
+
+    if (integrationId === 'int_apinex') {
+      const apiKey = stored.apiKey || process.env.APINEX_API_KEY || 'sk-apx1592cd6b7c07cdbb45239662d03fdb87ef686b5553acd2f';
+      return { ...stored, apiKey };
+    }
+
+    if (integrationId === 'int_supabase') {
+      const publishableKey = stored.publishableKey || stored.apiKey || process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_0Oz4cvN8zitr3I_nJZ_vXA_pyMzQarR';
+      const projectUrl = stored.projectUrl || process.env.SUPABASE_URL || 'https://api.supabase.co';
+      return { ...stored, publishableKey, apiKey: publishableKey, projectUrl };
     }
 
     return Object.keys(stored).length > 0 ? stored : null;

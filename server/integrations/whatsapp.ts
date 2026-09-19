@@ -158,6 +158,57 @@ export class WhatsAppService {
   }
 
   /**
+   * Explicitly validate server-side environment variables for WhatsApp
+   * Returns clear error message explaining missing variables without exposing any secret values
+   */
+  public static validateEnvironment(): {
+    isValid: boolean;
+    missing: ('WHATSAPP_ACCESS_TOKEN' | 'WHATSAPP_PHONE_NUMBER_ID' | 'WHATSAPP_BUSINESS_ACCOUNT_ID')[];
+    configured: ('WHATSAPP_ACCESS_TOKEN' | 'WHATSAPP_PHONE_NUMBER_ID' | 'WHATSAPP_BUSINESS_ACCOUNT_ID')[];
+    errorMessage?: string;
+    errorMessageAr?: string;
+  } {
+    const missing: ('WHATSAPP_ACCESS_TOKEN' | 'WHATSAPP_PHONE_NUMBER_ID' | 'WHATSAPP_BUSINESS_ACCOUNT_ID')[] = [];
+    const configured: ('WHATSAPP_ACCESS_TOKEN' | 'WHATSAPP_PHONE_NUMBER_ID' | 'WHATSAPP_BUSINESS_ACCOUNT_ID')[] = [];
+
+    if (process.env.WHATSAPP_ACCESS_TOKEN?.trim()) {
+      configured.push('WHATSAPP_ACCESS_TOKEN');
+    } else {
+      missing.push('WHATSAPP_ACCESS_TOKEN');
+    }
+
+    if (process.env.WHATSAPP_PHONE_NUMBER_ID?.trim()) {
+      configured.push('WHATSAPP_PHONE_NUMBER_ID');
+    } else {
+      missing.push('WHATSAPP_PHONE_NUMBER_ID');
+    }
+
+    if (process.env.WHATSAPP_BUSINESS_ACCOUNT_ID?.trim()) {
+      configured.push('WHATSAPP_BUSINESS_ACCOUNT_ID');
+    } else {
+      missing.push('WHATSAPP_BUSINESS_ACCOUNT_ID');
+    }
+
+    const isValid = missing.length === 0;
+
+    let errorMessage: string | undefined;
+    let errorMessageAr: string | undefined;
+
+    if (!isValid) {
+      errorMessage = `Missing server-side WhatsApp environment variables: [${missing.join(', ')}]. Please configure them in your server/Vercel environment settings.`;
+      errorMessageAr = `متغيرات بيئة WhatsApp غير مكتملة في الخادم: المتغيرات الناقصة هي [${missing.join('، ')}]. يرجى ضبطها كمتغيرات بيئية في إعدادات الخادم أو Vercel.`;
+    }
+
+    return {
+      isValid,
+      missing,
+      configured,
+      errorMessage,
+      errorMessageAr
+    };
+  }
+
+  /**
    * Send WhatsApp text message via Meta Cloud API
    * POST https://graph.facebook.com/${version}/${phoneNumberId}/messages
    * Guarded: Won't dispatch before real API connection is successful.

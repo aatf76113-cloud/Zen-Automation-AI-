@@ -14,21 +14,22 @@ import { useApp } from '../../context/AppContext';
 export const AiAssistantFloating: React.FC = () => {
   const { isAiCopilotOpen, setIsAiCopilotOpen, setCurrentView, language, t } = useApp();
 
-  const [messages, setMessages] = useState<Array<{ sender: 'user' | 'ai'; text: string }>>([
+  const [messages, setMessages] = useState<Array<{ sender: 'user' | 'ai'; text: string; provider?: string }>>([
     {
       sender: 'ai',
       text:
         language === 'ar'
-          ? 'مرحباً! أنا زين كوبايلوت (Zain Copilot) مساعدك الذكي داخل المنصة. يمكنني مساعدتك في بناء مسارات العمل، كتابة الـ Prompts، وربط الواتساب و CRM. كيف أساعدك الآن؟'
-          : 'Hello! I am Zain Copilot, your in-platform AI automation architect. How can I assist you with your workflows or integrations today?'
+          ? 'مرحباً! أنا زين كوبايلوت (Zain Copilot) مساعدك الذكي داخل المنصة. يمكنني مساعدتك في بناء مسارات العمل، كتابة الـ Prompts، وربط الواتساب و CRM ونماذج Ollama المحلية (http://127.0.0.1:11434). كيف أساعدك الآن؟'
+          : 'Hello! I am Zain Copilot, your in-platform AI automation architect. I can assist with workflows, CRM, and local Ollama models (http://127.0.0.1:11434). How can I help?'
     }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [useOllama, setUseOllama] = useState(false);
 
   if (!isAiCopilotOpen) return null;
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
 
     const userText = input;
@@ -36,19 +37,47 @@ export const AiAssistantFloating: React.FC = () => {
     setInput('');
     setIsTyping(true);
 
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: userText,
+          provider: useOllama ? 'ollama' : undefined,
+          model: useOllama ? 'ollama/llama3:latest' : undefined,
+          systemPrompt: 'أنت مساعد ذكي لمنصة زين للأتمتة والذكاء الاصطناعي (Zain Automation AI). قدم نصائح برمجية وعملية دقيقة وموجزة بالعربية.'
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const reply = data.response || 'تم استلام طلبك ومعالجته بنجاح.';
+        setMessages((prev) => [
+          ...prev,
+          {
+            sender: 'ai',
+            text: reply,
+            provider: data.provider || (useOllama ? 'Ollama Local' : 'Zain AI')
+          }
+        ]);
+      } else {
+        throw new Error('API request failed');
+      }
+    } catch {
       let reply = '';
       if (userText.includes('واتساب') || userText.toLowerCase().includes('whatsapp')) {
         reply = `لربط الواتساب بأفضل ممارسة: توجه إلى تبويب التكاملات (Integrations) وفعل WhatsApp Business API. بعد ذلك، يمكنك سحب عقدة Trigger "Inbound Message" في محرر الـ Workflow وربطها بوكيل الذكاء الاصطناعي للرد الفوري خلال 200ms.`;
       } else if (userText.includes('crm') || userText.includes('عميل')) {
         reply = `يمكنك إرسال أي عميل مؤهل إلى الـ CRM تلقائياً باستخدام عقدة "Create Customer" في محرر المسارات، وتحديد مرحلة الـ Pipeline المناسبة مثل (Qualified أو Proposal).`;
+      } else if (userText.includes('ollama') || userText.includes('داخلي') || userText.includes('نفق') || userText.includes('cloudflare')) {
+        reply = `يدعم النظام خادم Ollama المحلي (http://127.0.0.1:11434) والأنفاق الخارجية العامة عبر Cloudflare (https://xxxx.trycloudflare.com) مع حماية وترويسات x-api-key: ZAIN_SECRET_2026 ومطابقة Content-Type: application/json.`;
       } else {
-        reply = `فكرة ممتازة! في منصة زين للأتمتة والذكاء الاصطناعي (Zain Automation AI) يمكنك استخدام ميزة "AI Workflow Generator" لكتابة طلبك باللغة الطبيعية وسيقوم النظام ببناء هيكل الـ Nodes كاملة مع شروط التفريع والربط الآلي فوراً.`;
+        reply = `في منصة زين للأتمتة والذكاء الاصطناعي (Zain Automation AI) يمكنك استخدام ميزة "AI Workflow Generator" أو تشغيل النماذج محلياً (http://127.0.0.1:11434) أو عبر نفق عام خارجي (https://xxxx.trycloudflare.com) بأمان تام.`;
       }
-
       setMessages((prev) => [...prev, { sender: 'ai', text: reply }]);
+    } finally {
       setIsTyping(false);
-    }, 800);
+    }
   };
 
   return (
@@ -103,19 +132,34 @@ export const AiAssistantFloating: React.FC = () => {
         )}
       </div>
 
-      {/* Quick Prompts */}
-      <div className="px-3 py-1.5 border-t border-slate-100 dark:border-slate-800 flex gap-1.5 overflow-x-auto text-[10px]">
+      {/* Quick Prompts & Mode Toggle */}
+      <div className="px-3 py-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-1.5 overflow-x-auto text-[10px]">
+        <div className="flex items-center gap-1.5 shrink-0">
+          <button
+            onClick={() => setInput('كيف أربط الواتساب وأرسل رسائل ترحيب؟')}
+            className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap"
+          >
+            💬 ربط الواتساب
+          </button>
+          <button
+            onClick={() => setInput('فحص حالة خادم Ollama الداخلي على http://127.0.0.1:11434')}
+            className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap"
+          >
+            💻 فحص Ollama الداخلي
+          </button>
+        </div>
+
         <button
-          onClick={() => setInput('كيف أربط الواتساب وأرسل رسائل ترحيب؟')}
-          className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap"
+          onClick={() => setUseOllama(!useOllama)}
+          className={`px-2 py-1 rounded-lg font-medium whitespace-nowrap transition-colors flex items-center gap-1 ${
+            useOllama
+              ? 'bg-emerald-600 text-white shadow-sm'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+          }`}
+          title="استخدام خادم Ollama الداخلي (http://127.0.0.1:11434)"
         >
-          💬 ربط الواتساب
-        </button>
-        <button
-          onClick={() => setInput('كيف أرسل الـ Leads إلى CRM تلقائيًا؟')}
-          className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 whitespace-nowrap"
-        >
-          🎯 حفظ العملاء في CRM
+          <span className={`w-1.5 h-1.5 rounded-full ${useOllama ? 'bg-white' : 'bg-slate-400'}`} />
+          <span>{useOllama ? 'Ollama 127.0.0.1' : 'سحابي'}</span>
         </button>
       </div>
 

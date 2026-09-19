@@ -36,7 +36,7 @@ export const AVAILABLE_NODES: NodeDefinition[] = [
     descriptionAr: 'استقبال طلبات HTTP POST الفورية من أي منصة أو موقع خارجي',
     icon: 'Webhook',
     categoryColor: 'emerald',
-    defaultConfig: { method: 'POST', path: '/webhook/lead-incoming', authRequired: false }
+    defaultConfig: { method: 'POST', path: '/api/webhooks/wf_01', authRequired: false }
   },
   {
     type: 'trigger',
@@ -484,7 +484,7 @@ export const INITIAL_WORKFLOWS: Workflow[] = [
         description: 'Webhook from e-commerce store with tracking info',
         descriptionAr: 'استقبال إشعار الشحن ورقم بوليصة النقل من المتجر',
         position: { x: 50, y: 150 },
-        config: { path: '/webhook/order-shipped' },
+        config: { path: '/api/webhooks/wf_03' },
         icon: 'Webhook'
       },
       {
@@ -880,6 +880,19 @@ export const INITIAL_INTEGRATIONS: IntegrationService[] = [
 
   // Automation & Developer
   {
+    id: 'int_ollama',
+    name: 'Ollama AI (محلي داخلي أو نفق Cloudflare)',
+    nameAr: 'خادم Ollama (محلي 127.0.0.1 أو نفق Cloudflare خارجي)',
+    category: 'automation',
+    icon: 'Cpu',
+    connected: true,
+    statusText: 'Local & Cloudflare Tunnel (https://xxxx.trycloudflare.com)',
+    statusTextAr: 'داخلي (127.0.0.1) أو خارجي عام (trycloudflare.com)',
+    description: 'Run private local LLMs on http://127.0.0.1:11434 or connect to public Cloudflare Tunnels (https://xxxx.trycloudflare.com) with x-api-key header authentication.',
+    descriptionAr: 'تشغيل نماذج الذكاء الاصطناعي محلياً على (http://127.0.0.1:11434) أو ربطها عبر نفق عام وخارجي (https://xxxx.trycloudflare.com) مع مصادقة x-api-key.',
+    authType: 'api_key'
+  },
+  {
     id: 'int_webhooks',
     name: 'Custom Webhooks In/Out',
     category: 'automation',
@@ -901,6 +914,32 @@ export const INITIAL_INTEGRATIONS: IntegrationService[] = [
     statusTextAr: 'المفاتيح البرمجية نشطة',
     description: 'Programmatic API to trigger workflows, fetch executions, and manage agents remotely.',
     descriptionAr: 'واجهة برمجية كاملة لتشغيل المسارات برمجياً وإدارة الوكلاء والبيانات من أي نظام خارجي.',
+    authType: 'api_key'
+  },
+  {
+    id: 'int_apinex',
+    name: 'APInex DeepSeek Engine',
+    nameAr: 'محرك الذكاء الاصطناعي APInex (DeepSeek-V4)',
+    category: 'automation',
+    icon: 'Sparkles',
+    connected: true,
+    statusText: 'Authenticated & Ready',
+    statusTextAr: 'تم التحقق من المفتاح بنجاح',
+    description: 'High-speed reasoning and inference via DeepSeek V4 and Claude models on APInex gateway.',
+    descriptionAr: 'معالجة واستدلال ذكي فائق السرعة عبر نماذج DeepSeek V4 و Claude على بوابة APInex.',
+    authType: 'api_key'
+  },
+  {
+    id: 'int_supabase',
+    name: 'Supabase Cloud Platform',
+    nameAr: 'منصة Supabase (قاعدة بيانات وتخزين)',
+    category: 'automation',
+    icon: 'Database',
+    connected: true,
+    statusText: 'Publishable Key Active',
+    statusTextAr: 'المفتاح المنشور نشط وموثق',
+    description: 'Cloud Postgres database, auth, vector storage, and edge functions with Row Level Security (RLS).',
+    descriptionAr: 'قاعدة بيانات سحابية متقدمة (PostgreSQL) مع حماية RLS ومصادقة وتخزين متجهي ذكي.',
     authType: 'api_key'
   }
 ];

@@ -110,6 +110,18 @@ export const IntegrationsView: React.FC = () => {
         webhookUrl: item.hasCredentials ? '••••••••••••••••••••' : '',
         channel: item.config?.channel || '#leads'
       });
+    } else if (item.id === 'int_ollama') {
+      setFormCredentials({
+        baseUrl: item.config?.baseUrl || 'http://127.0.0.1:11434',
+        apiKey: item.config?.apiKey || 'ZAIN_SECRET_2026',
+        model: item.config?.model || 'llama3:latest'
+      });
+    } else if (item.id === 'int_supabase') {
+      setFormCredentials({
+        publishableKey: item.config?.publishableKey || 'sb_publishable_0Oz4cvN8zitr3I_nJZ_vXA_pyMzQarR',
+        apiKey: item.config?.publishableKey || 'sb_publishable_0Oz4cvN8zitr3I_nJZ_vXA_pyMzQarR',
+        projectUrl: item.config?.projectUrl || 'https://api.supabase.co'
+      });
     } else {
       setFormCredentials({
         apiKey: item.hasCredentials ? '••••••••••••••••••••' : '',
@@ -557,6 +569,145 @@ export const IntegrationsView: React.FC = () => {
                       onChange={(e) => setFormCredentials({ ...formCredentials, channel: e.target.value })}
                       className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white text-xs"
                     />
+                  </div>
+                </>
+              ) : configuringIntegration.id === 'int_ollama' ? (
+                <>
+                  {/* Mode Selector Presets */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      {t('نوع الاتصال ونمط التوجيه', 'Connection Mode & Endpoint')}
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setFormCredentials({ ...formCredentials, baseUrl: 'http://127.0.0.1:11434' })}
+                        className={`px-3 py-2 text-xs font-medium rounded-xl border text-center transition-all ${
+                          (formCredentials.baseUrl || '').includes('127.0.0.1') || (formCredentials.baseUrl || '').includes('localhost')
+                            ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-700 dark:text-blue-300 font-semibold'
+                            : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+                        }`}
+                      >
+                        💻 {t('خادم محلي داخلي', 'Internal Local (127.0.0.1)')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFormCredentials({
+                          ...formCredentials,
+                          baseUrl: (formCredentials.baseUrl && formCredentials.baseUrl.includes('trycloudflare.com'))
+                            ? formCredentials.baseUrl
+                            : 'https://xxxx.trycloudflare.com'
+                        })}
+                        className={`px-3 py-2 text-xs font-medium rounded-xl border text-center transition-all ${
+                          (formCredentials.baseUrl || '').includes('trycloudflare.com') || (formCredentials.baseUrl || '').startsWith('https://')
+                            ? 'bg-amber-50 dark:bg-amber-900/30 border-amber-500 text-amber-700 dark:text-amber-300 font-semibold'
+                            : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+                        }`}
+                      >
+                        🌐 {t('عام وخارجي (Cloudflare)', 'Public Cloudflare Tunnel')}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between text-xs">
+                      <span>{t('رابط الخادم أو نفق Cloudflare (Base URL)', 'Ollama Base URL / Cloudflare Tunnel')}</span>
+                      {(formCredentials.baseUrl || '').includes('trycloudflare.com') || (formCredentials.baseUrl || '').startsWith('https://') ? (
+                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300 font-medium">
+                          🌐 {t('نفق عام وخارجي', 'Public Tunnel Active')}
+                        </span>
+                      ) : (
+                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 font-medium">
+                          🔒 {t('داخلي محلي', 'Local Internal')}
+                        </span>
+                      )}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="https://xxxx.trycloudflare.com أو http://127.0.0.1:11434"
+                      value={formCredentials.baseUrl || ''}
+                      onChange={(e) => setFormCredentials({ ...formCredentials, baseUrl: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white text-xs"
+                    />
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                      {t(
+                        'يدعم الخوادم الداخلية (127.0.0.1:11434) والأنفاق الخارجية العامة (مثل https://xxxx.trycloudflare.com).',
+                        'Supports internal servers (127.0.0.1:11434) and public external tunnels (e.g. https://xxxx.trycloudflare.com).'
+                      )}
+                    </p>
+                  </div>
+
+                  {/* API Key Header */}
+                  <div className="space-y-1">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between text-xs">
+                      <span>{t('مفتاح المصادقة والترويسة (x-api-key)', 'API Key Header (x-api-key)')}</span>
+                      <span className="text-[10px] font-mono text-slate-400">
+                        Content-Type: application/json
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="ZAIN_SECRET_2026"
+                      value={formCredentials.apiKey !== undefined ? formCredentials.apiKey : 'ZAIN_SECRET_2026'}
+                      onChange={(e) => setFormCredentials({ ...formCredentials, apiKey: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white text-xs"
+                    />
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                      {t('يتم إرسال المفتاح تلقائياً في ترويسات `x-api-key` و `Authorization: Bearer`.', 'Sent automatically in `x-api-key` and `Authorization: Bearer` headers.')}
+                    </p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300 text-xs">
+                      {t('النموذج الافتراضي (Default Model)', 'Default Model')}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="llama3:latest أو mistral أو deepseek-r1"
+                      value={formCredentials.model || 'llama3:latest'}
+                      onChange={(e) => setFormCredentials({ ...formCredentials, model: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white text-xs"
+                    />
+                    <p className="text-[11px] text-slate-400">
+                      {t('أمثلة: `llama3:latest` أو `deepseek-r1:latest` أو `mistral:latest` أو `qwen2.5:latest`.', 'Examples: `llama3:latest`, `deepseek-r1:latest`, `mistral:latest`, `qwen2.5:latest`.')}
+                    </p>
+                  </div>
+                </>
+              ) : configuringIntegration.id === 'int_supabase' ? (
+                <>
+                  <div className="space-y-1">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between text-xs">
+                      <span>{t('المفتاح المنشور (Publishable API Key)', 'Publishable API Key (sb_publishable_...)')}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 font-medium">
+                        RLS Protected
+                      </span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="sb_publishable_0Oz4cvN8zitr3I_nJZ_vXA_pyMzQarR"
+                      value={formCredentials.publishableKey !== undefined ? formCredentials.publishableKey : (formCredentials.apiKey || '')}
+                      onChange={(e) => setFormCredentials({ ...formCredentials, publishableKey: e.target.value, apiKey: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white text-xs"
+                    />
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                      {t('مفتاح Supabase المنشور الحديث المخصص للعميل والبروكسي الآمن، محمي بسياسات RLS على مستوى الصفوف.', 'Modern Supabase publishable key for client/safe-proxy usage, governed by Row Level Security.')}
+                    </p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300 text-xs">
+                      {t('رابط مشروع Supabase (Project URL)', 'Supabase Project URL')}
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="https://xyzproject.supabase.co"
+                      value={formCredentials.projectUrl || 'https://api.supabase.co'}
+                      onChange={(e) => setFormCredentials({ ...formCredentials, projectUrl: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white text-xs"
+                    />
+                    <p className="text-[11px] text-slate-400">
+                      {t('مثال: `https://xxxx.supabase.co` للاتصال بـ PostgreSQL والـ Storage و Edge Functions.', 'Example: `https://xxxx.supabase.co` to connect PostgreSQL, Storage, and Edge Functions.')}
+                    </p>
                   </div>
                 </>
               ) : (
