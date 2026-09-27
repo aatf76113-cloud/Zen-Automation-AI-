@@ -119,8 +119,9 @@ export const IntegrationsView: React.FC = () => {
     } else if (item.id === 'int_supabase') {
       setFormCredentials({
         publishableKey: item.config?.publishableKey || 'sb_publishable_OGZ4cvN8zItr3L_nJ7_vXA_pyMzQa-R',
+        serviceRoleKey: item.config?.serviceRoleKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNueXF0bXVnYWZ2b3FxcGZzZnhwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTc5OTk2NiwiZXhwIjoyMTA1Mzc1OTY2fQ.L1o4YrF5VZAxxHmorjzlY9Xqp0xN5SL8OBiCD-dzAMk',
         apiKey: item.config?.publishableKey || 'sb_publishable_OGZ4cvN8zItr3L_nJ7_vXA_pyMzQa-R',
-        projectUrl: item.config?.projectUrl || 'https://snyqtmugafvoqqpfsxp.supabase.co'
+        projectUrl: item.config?.projectUrl || 'https://snyqtmugafvoqqpfsfxp.supabase.co'
       });
     } else {
       setFormCredentials({
@@ -724,6 +725,25 @@ export const IntegrationsView: React.FC = () => {
                 <>
                   <div className="space-y-1">
                     <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between text-xs">
+                      <span>{t('مفتاح الخدمة الإداري (Service Role Secret Key)', 'Admin Service Role Key (service_role)')}</span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-900/50 text-purple-800 dark:text-purple-300 font-medium">
+                        Admin / Full Bypass RLS
+                      </span>
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      value={formCredentials.serviceRoleKey || ''}
+                      onChange={(e) => setFormCredentials({ ...formCredentials, serviceRoleKey: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white text-xs"
+                    />
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                      {t('مفتاح السيرفر الإداري للوصول المباشر لقواعد بيانات PostgreSQL وتنفيذ المهام الخلفية.', 'Server-side administrator key for direct database access, background tasks, and full schema control.')}
+                    </p>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between text-xs">
                       <span>{t('المفتاح المنشور (Publishable API Key)', 'Publishable API Key (sb_publishable_...)')}</span>
                       <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-300 font-medium">
                         RLS Protected
@@ -747,8 +767,8 @@ export const IntegrationsView: React.FC = () => {
                     </label>
                     <input
                       type="text"
-                      placeholder="https://snyqtmugafvoqqpfsxp.supabase.co"
-                      value={formCredentials.projectUrl || 'https://snyqtmugafvoqqpfsxp.supabase.co'}
+                      placeholder="https://snyqtmugafvoqqpfsfxp.supabase.co"
+                      value={formCredentials.projectUrl || 'https://snyqtmugafvoqqpfsfxp.supabase.co'}
                       onChange={(e) => setFormCredentials({ ...formCredentials, projectUrl: e.target.value })}
                       className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 font-mono text-slate-900 dark:text-white text-xs"
                     />

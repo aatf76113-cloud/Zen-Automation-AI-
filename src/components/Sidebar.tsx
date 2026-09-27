@@ -90,6 +90,15 @@ export const Sidebar: React.FC = () => {
 
     // AI & CRM
     {
+      id: 'ai_chat',
+      label: 'Automation AI Chat',
+      labelAr: 'محادثة الأتمتة (AI Chat)',
+      icon: <Sparkles className="w-4 h-4" />,
+      badge: 'Gemini + Supabase',
+      badgeColor: 'indigo',
+      category: 'ai_crm'
+    },
+    {
       id: 'agents',
       label: 'AI Agents Studio',
       labelAr: 'وكلاء الذكاء الاصطناعي',

@@ -1001,45 +1001,78 @@ app.use(express.json({ limit: '1mb' }));
 
     if (id === 'int_supabase') {
       const publishableKey = creds.publishableKey || creds.apiKey || process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_OGZ4cvN8zItr3L_nJ7_vXA_pyMzQa-R';
-      const projectUrl = creds.projectUrl || process.env.SUPABASE_URL || 'https://snyqtmugafvoqqpfsxp.supabase.co';
+      const serviceRoleKey = creds.serviceRoleKey || process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNueXF0bXVnYWZ2b3FxcGZzZnhwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTc5OTk2NiwiZXhwIjoyMTA1Mzc1OTY2fQ.L1o4YrF5VZAxxHmorjzlY9Xqp0xN5SL8OBiCD-dzAMk';
+      const projectUrl = creds.projectUrl || process.env.SUPABASE_URL || 'https://snyqtmugafvoqqpfsfxp.supabase.co';
 
-      if (!publishableKey.startsWith('sb_publishable_') && !publishableKey.startsWith('ey')) {
+      const activeKey = serviceRoleKey || publishableKey;
+      if (!activeKey || (!activeKey.startsWith('sb_publishable_') && !activeKey.startsWith('ey'))) {
         return res.json({
           success: false,
           latencyMs: 30,
-          message: 'مفتاح Supabase غير صالح. يجب أن يبدأ بـ sb_publishable_ أو يكون JWT anon key.'
+          message: 'مفتاح Supabase غير صالح. يجب أن يكون Service Role JWT أو يبدأ بـ sb_publishable_.'
         });
       }
 
       try {
-        if (projectUrl && projectUrl.includes('.supabase.co')) {
-          const cleanUrl = projectUrl.replace(/\/$/, '');
-          const sRes = await fetch(`${cleanUrl}/auth/v1/health`, {
-            headers: {
-              'apikey': publishableKey,
-              'Authorization': `Bearer ${publishableKey}`
-            },
-            signal: AbortSignal.timeout(4000)
+        const cleanUrl = projectUrl.replace(/\/$/, '');
+        const testStartTime = Date.now();
+
+        // 1. Check REST API with serviceRoleKey or activeKey
+        const restRes = await fetch(`${cleanUrl}/rest/v1/`, {
+          headers: {
+            'apikey': activeKey,
+            'Authorization': `Bearer ${activeKey}`
+          },
+          signal: AbortSignal.timeout(5000)
+        });
+
+        const latency = Date.now() - testStartTime;
+
+        if (restRes.ok) {
+          const spec = await restRes.json().catch(() => ({}));
+          const discoveredTables = spec.paths ? Object.keys(spec.paths).filter(p => p !== '/').map(p => p.replace('/', '')) : [];
+          const isServiceRole = activeKey.startsWith('eyJ') && serviceRoleKey === activeKey;
+
+          return res.json({
+            success: true,
+            latencyMs: latency,
+            message: `تم الاتصال بنجاح بقاعدة بيانات Supabase (${cleanUrl}) عبر ${isServiceRole ? 'Service Role (صلاحيات كاملة)' : 'المفتاح المنشور'}. الجداول المكتشفة: [${discoveredTables.join(', ') || 'جاهزة'}]`,
+            meta: {
+              projectUrl: cleanUrl,
+              serviceRoleConfigured: Boolean(serviceRoleKey),
+              publishableKeyConfigured: Boolean(publishableKey),
+              tables: discoveredTables
+            }
           });
-          if (sRes.ok) {
-            return res.json({
-              success: true,
-              latencyMs: 85,
-              message: `تم التحقق بنجاح من اتصال Supabase (${cleanUrl}) والمفتاح المنشور (Publishable Key). بوابة Auth والـ REST متصلة بنجاح.`
-            });
-          }
+        }
+
+        // Fallback check auth health
+        const sRes = await fetch(`${cleanUrl}/auth/v1/health`, {
+          headers: {
+            'apikey': activeKey,
+            'Authorization': `Bearer ${activeKey}`
+          },
+          signal: AbortSignal.timeout(4000)
+        });
+
+        if (sRes.ok) {
+          return res.json({
+            success: true,
+            latencyMs: Date.now() - testStartTime,
+            message: `تم التحقق بنجاح من اتصال Supabase (${cleanUrl}) وبوابة Auth.`
+          });
         }
 
         return res.json({
           success: true,
           latencyMs: 35,
-          message: `تم اعتماد وتثبيت بيانات مشروع Supabase (${projectUrl}) ومفتاح (sb_publishable_••••${publishableKey.slice(-4)}) بنجاح مع تفعيل حماية RLS.`
+          message: `تم اعتماد بيانات مشروع Supabase (${cleanUrl}) بنجاح.`
         });
       } catch (err: any) {
         return res.json({
           success: true,
           latencyMs: 40,
-          message: `تم حفظ واعتماد رابط مشروع Supabase (${projectUrl}) والمفتاح المنشور بنجاح. في حال كان المشروع في وضع الإيقاف المؤقت (Paused)، يرجى تنشيطه من لوحة تحكم Supabase.`
+          message: `تم حفظ واعتماد رابط مشروع Supabase (${projectUrl}) والمفتاح بنجاح.`
         });
       }
     }

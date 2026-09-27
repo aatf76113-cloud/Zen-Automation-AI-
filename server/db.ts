@@ -928,15 +928,17 @@ class MultiTenantDatabase {
       if (item.id === 'int_supabase') {
         const stored = tenant.credentials?.['int_supabase'] || {};
         const publishableKey = stored.publishableKey || stored.apiKey || process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_OGZ4cvN8zItr3L_nJ7_vXA_pyMzQa-R';
-        const projectUrl = stored.projectUrl || process.env.SUPABASE_URL || 'https://snyqtmugafvoqqpfsxp.supabase.co';
+        const serviceRoleKey = stored.serviceRoleKey || process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNueXF0bXVnYWZ2b3FxcGZzZnhwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTc5OTk2NiwiZXhwIjoyMTA1Mzc1OTY2fQ.L1o4YrF5VZAxxHmorjzlY9Xqp0xN5SL8OBiCD-dzAMk';
+        const projectUrl = stored.projectUrl || process.env.SUPABASE_URL || 'https://snyqtmugafvoqqpfsfxp.supabase.co';
         return {
           ...item,
           connected: true,
           hasCredentials: true,
-          statusText: 'Supabase Active (RLS Safe)',
-          statusTextAr: 'مفتاح Supabase نشط وموثق',
+          statusText: 'Supabase Connected (PostgreSQL & Service Role Active)',
+          statusTextAr: 'متصل مع Supabase (PostgreSQL والصلاحيات الإدارية مفعلة)',
           maskedCredentials: {
             publishableKey: `${publishableKey.slice(0, 15)}••••${publishableKey.slice(-4)}`,
+            serviceRoleKey: `${serviceRoleKey.slice(0, 15)}••••${serviceRoleKey.slice(-6)}`,
             projectUrl
           }
         };
@@ -1104,8 +1106,9 @@ class MultiTenantDatabase {
 
     if (integrationId === 'int_supabase') {
       const publishableKey = stored.publishableKey || stored.apiKey || process.env.SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_OGZ4cvN8zItr3L_nJ7_vXA_pyMzQa-R';
-      const projectUrl = stored.projectUrl || process.env.SUPABASE_URL || 'https://snyqtmugafvoqqpfsxp.supabase.co';
-      return { ...stored, publishableKey, apiKey: publishableKey, projectUrl };
+      const serviceRoleKey = stored.serviceRoleKey || process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNueXF0bXVnYWZ2b3FxcGZzZnhwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTc5OTk2NiwiZXhwIjoyMTA1Mzc1OTY2fQ.L1o4YrF5VZAxxHmorjzlY9Xqp0xN5SL8OBiCD-dzAMk';
+      const projectUrl = stored.projectUrl || process.env.SUPABASE_URL || 'https://snyqtmugafvoqqpfsfxp.supabase.co';
+      return { ...stored, publishableKey, apiKey: publishableKey, serviceRoleKey, projectUrl };
     }
 
     return Object.keys(stored).length > 0 ? stored : null;

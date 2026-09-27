@@ -11,6 +11,7 @@ import { WorkflowCanvas } from './components/WorkflowBuilder/WorkflowCanvas';
 import { WorkflowsListView } from './components/Workflows/WorkflowsListView';
 import { TemplatesView } from './components/Templates/TemplatesView';
 import { AgentsView } from './components/AiAgents/AgentsView';
+import { AiChatView } from './components/AiChat/AiChatView';
 import { CrmView } from './components/CRM/CrmView';
 import { FormsView } from './components/Forms/FormsView';
 import { ExecutionsView } from './components/Executions/ExecutionsView';
@@ -38,6 +39,8 @@ const MainContent: React.FC = () => {
         return <TemplatesView />;
       case 'agents':
         return <AgentsView />;
+      case 'ai_chat':
+        return <AiChatView />;
       case 'crm':
         return <CrmView />;
       case 'forms':

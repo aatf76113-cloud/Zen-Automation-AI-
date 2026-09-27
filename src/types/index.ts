@@ -337,6 +337,7 @@ export type CurrentView =
   | 'workflows'
   | 'templates'
   | 'agents'
+  | 'ai_chat'
   | 'crm'
   | 'forms'
   | 'executions'
